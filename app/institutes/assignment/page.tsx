@@ -34,7 +34,7 @@ export function StudentFacultyAssignment() {
   const unassignedStudents = students.filter(s => !s.facultyAdvisor);
   const assignedStudents = students.filter(s => s.facultyAdvisor);
 
-  const getFacultyById = (id: string) => faculty.find(f => f.id === id);
+  const getFacultyById = (id: number) => faculty.find(f => f.id === id);
   const getAvailableFaculty = (department: string) => 
     faculty.filter(f => f.department === department && f.assignedStudents.length < f.maxStudents);
 
@@ -49,7 +49,7 @@ export function StudentFacultyAssignment() {
     setSelectedFaculty("");
   };
 
-  const handleUnassignStudent = (studentId: string) => {
+  const handleUnassignStudent = (studentId: number) => {
     // TODO: Replace with API call -> PUT /api/institutes/students/:id/unassign-faculty
     console.log(`Unassigning student ${studentId} from faculty`);
   };
@@ -63,7 +63,7 @@ export function StudentFacultyAssignment() {
   const departments = [...new Set(students.map(s => s.department))];
 
   return (
-    <DashboardLayout role = "hei" currentPage="Student-Faculty Assignment">
+    <DashboardLayout role = "university"currentPage="Student-Faculty Assignment">
       <div className="space-y-6">
         {/* Header */}
         <div>
@@ -180,7 +180,7 @@ export function StudentFacultyAssignment() {
                           </div>
                         </td>
                         <td className="p-3 text-text-primary">{student.department}</td>
-                        <td className="p-3 text-text-primary">{student.batchYear}</td>
+                        <td className="p-3 text-text-primary">{student.batch}</td>
                         <td className="p-3">
                           <Badge variant={student.cgpa >= 8.0 ? "default" : "secondary"}>
                             {student.cgpa}
@@ -265,7 +265,7 @@ export function StudentFacultyAssignment() {
                   <Label>Student</Label>
                   <div className="p-3 bg-card-background rounded border">
                     <p className="font-medium text-text-primary">{selectedStudent.name}</p>
-                    <p className="text-sm text-text-secondary">{selectedStudent.department} - {selectedStudent.batchYear}</p>
+                    <p className="text-sm text-text-secondary">{selectedStudent.department} - {selectedStudent.batch}</p>
                   </div>
                 </div>
                 
@@ -277,11 +277,11 @@ export function StudentFacultyAssignment() {
                     </SelectTrigger>
                     <SelectContent>
                       {getAvailableFaculty(selectedStudent.department).map(facultyMember => (
-                        <SelectItem key={facultyMember.id} value={facultyMember.id}>
+                        <SelectItem key={facultyMember.id} value={facultyMember.id.toString()}>
                           <div>
                             <p className="font-medium">{facultyMember.name}</p>
                             <p className="text-xs text-text-secondary">
-                              {facultyMember.studentsAssigned.length}/{facultyMember.maxStudents} students • {facultyMember.specialization}
+                              {facultyMember.assignedStudents.length}/{facultyMember.maxStudents} students • {facultyMember.specialization}
                             </p>
                           </div>
                         </SelectItem>
@@ -331,19 +331,19 @@ export function StudentFacultyAssignment() {
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-medium text-text-primary">
-                      {facultyMember.studentsAssigned.length}/{facultyMember.maxStudents} students
+                      {facultyMember.assignedStudents.length}/{facultyMember.maxStudents} students
                     </p>
                     <div className="w-20 bg-gray-200 rounded-full h-2 mt-1">
                       <div 
                         className={`h-2 rounded-full ${
-                          facultyMember.studentsAssigned.length >= facultyMember.maxStudents 
+                          facultyMember.assignedStudents.length >= facultyMember.maxStudents 
                             ? 'bg-error' 
-                            : facultyMember.studentsAssigned.length >= facultyMember.maxStudents * 0.8
+                            : facultyMember.assignedStudents.length >= facultyMember.maxStudents * 0.8
                             ? 'bg-warning'
                             : 'bg-success'
                         }`}
                         style={{ 
-                          width: `${(facultyMember.studentsAssigned.length / facultyMember.maxStudents) * 100}%` 
+                          width: `${(facultyMember.assignedStudents.length / facultyMember.maxStudents) * 100}%` 
                         }}
                       />
                     </div>
@@ -357,3 +357,5 @@ export function StudentFacultyAssignment() {
     </DashboardLayout>
   );
 }
+
+export default StudentFacultyAssignment;
