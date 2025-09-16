@@ -77,10 +77,8 @@ const roleNavigation: Record<UserRole, NavItem[]> = {
   ],
   recruiter: [
     { title: "Dashboard", href: "/recruiters", icon: LayoutDashboard },
-    { title: "Search Students", href: "/recruiters/search", icon: Search },
-    { title: "Saved Profiles", href: "/recruiters/saved", icon: BookOpen },
-    { title: "Analytics", href: "/recruiters/analytics", icon: BarChart3 },
-    { title: "Settings", href: "/recruiters/settings", icon: Settings },
+    { title: "Search Students", href: "/recruiters/students", icon: Search },
+    { title: "Universities", href: "/recruiters/universities", icon: BookOpen },
   ],
 }
 
@@ -150,7 +148,7 @@ export function Sidebar({ role, className }: SidebarProps) {
       <ScrollArea className="flex-1 px-4 py-6">
         <nav className="space-y-2">
           {navigation.map((item, index) => {
-            const isActive = pathname === item.href || pathname.startsWith(item.href + "/")
+            const isActive = pathname === item.href || (pathname.startsWith(item.href + "/") && !navigation.some(navItem => navItem.href !== item.href && pathname.startsWith(navItem.href + "/") && navItem.href.length > item.href.length));
             const Icon = item.icon
 
             return (

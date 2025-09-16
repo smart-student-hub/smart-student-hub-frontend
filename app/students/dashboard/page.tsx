@@ -67,7 +67,7 @@ export default function StudentDashboard() {
               <div className="hidden md:flex items-center space-x-4">
                 <div className="text-right">
                   <p className="text-sm text-slate-400">Current Semester</p>
-                  <p className="text-2xl font-bold">Fall 2024</p>
+                  <p className="text-2xl font-bold">3rd</p>
                 </div>
               </div>
             </div>
