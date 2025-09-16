@@ -5,6 +5,7 @@ import { DashboardLayout } from "@/components/shared/dashboard-layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Progress } from "@/components/ui/progress"
 import {
   Dialog,
   DialogContent,
@@ -18,7 +19,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { dummyStudents } from "@/lib/mock-data"
-import { Plus, FolderOpen, Calendar, Code, ExternalLink, Edit, Trash2, X } from "lucide-react"
+import { Plus, FolderOpen, Calendar, Code, ExternalLink, Edit, Trash2, X, Trophy, Target } from "lucide-react"
 
 interface Project {
   id: number
@@ -29,13 +30,17 @@ interface Project {
   startDate: string
   endDate?: string
   projectLink?: string
+  score?: number
 }
 
 export default function StudentProjects() {
   // TODO: Replace with API call -> GET /api/students/current/projects
   const currentStudent = dummyStudents[0]
   const [projects, setProjects] = useState<Project[]>([
-    ...currentStudent.projects,
+    {
+      ...currentStudent.projects[0],
+      score: 8
+    },
     {
       id: 2,
       title: "E-commerce Platform",
@@ -43,7 +48,8 @@ export default function StudentProjects() {
       technologies: ["React", "Node.js", "MongoDB", "Stripe"],
       status: "ongoing",
       startDate: "2024-03-01",
-      projectLink: "https://github.com/example/ecommerce"
+      projectLink: "https://github.com/example/ecommerce",
+      score: 7
     },
     {
       id: 3,
@@ -52,7 +58,8 @@ export default function StudentProjects() {
       technologies: ["React Native", "TypeScript", "Weather API"],
       status: "planned",
       startDate: "2024-04-15",
-      projectLink: "https://github.com/example/weather-app"
+      projectLink: "https://github.com/example/weather-app",
+      score: undefined
     },
   ])
 
@@ -67,9 +74,19 @@ export default function StudentProjects() {
     startDate: "",
     endDate: "",
     projectLink: "",
+    score: undefined as number | undefined,
   })
   const [currentTech, setCurrentTech] = useState("")
   const [editCurrentTech, setEditCurrentTech] = useState("")
+
+  // Calculate project statistics
+  const totalProjects = projects.length
+  const completedProjects = projects.filter(p => p.status === "completed")
+  const ongoingProjects = projects.filter(p => p.status === "ongoing")
+  const scoredProjects = projects.filter(p => p.score !== undefined)
+  const totalProjectScore = scoredProjects.reduce((sum, p) => sum + (p.score || 0), 0)
+  const maxPossibleScore = scoredProjects.length * 10
+  const averageProjectScore = scoredProjects.length > 0 ? totalProjectScore / scoredProjects.length : 0
 
   const resetNewProject = () => {
     setNewProject({
@@ -80,6 +97,7 @@ export default function StudentProjects() {
       startDate: "",
       endDate: "",
       projectLink: "",
+      score: undefined,
     })
     setCurrentTech("")
   }
@@ -87,9 +105,8 @@ export default function StudentProjects() {
   const handleAddProject = () => {
     if (!newProject.title || !newProject.description) return
     
-    // TODO: Replace with API call -> POST /api/projects
     const project: Project = {
-      id: Date.now(), // Generate unique ID
+      id: Date.now(),
       title: newProject.title,
       description: newProject.description,
       technologies: newProject.technologies,
@@ -97,6 +114,7 @@ export default function StudentProjects() {
       startDate: newProject.startDate,
       endDate: newProject.status === "completed" ? newProject.endDate : undefined,
       projectLink: newProject.projectLink || undefined,
+      score: newProject.status === "completed" || newProject.status === "ongoing" ? newProject.score : undefined,
     }
     
     setProjects(prev => [...prev, project])
@@ -107,12 +125,12 @@ export default function StudentProjects() {
   const handleEditProject = () => {
     if (!editingProject) return
     
-    // TODO: Replace with API call -> PUT /api/projects/:id
     setProjects(prev => prev.map(p => 
       p.id === editingProject.id 
         ? {
             ...editingProject,
-            endDate: editingProject.status === "completed" ? editingProject.endDate : undefined
+            endDate: editingProject.status === "completed" ? editingProject.endDate : undefined,
+            score: editingProject.status === "completed" || editingProject.status === "ongoing" ? editingProject.score : undefined,
           }
         : p
     ))
@@ -122,7 +140,6 @@ export default function StudentProjects() {
 
   const handleDeleteProject = (id: number) => {
     if (window.confirm('Are you sure you want to delete this project?')) {
-      // TODO: Replace with API call -> DELETE /api/projects/:id
       setProjects(prev => prev.filter(p => p.id !== id))
     }
   }
@@ -187,6 +204,22 @@ export default function StudentProjects() {
       default:
         return "bg-gray-100 text-gray-800 hover:bg-gray-100"
     }
+  }
+
+  const getScoreColor = (score: number) => {
+    const percentage = (score / 10) * 100
+    if (percentage >= 75) return "text-emerald-600"
+    if (percentage >= 50) return "text-blue-600"
+    if (percentage >= 25) return "text-amber-600"
+    return "text-slate-600"
+  }
+
+  const getScoreBadge = (score: number) => {
+    const percentage = (score / 10) * 100
+    if (percentage >= 75) return { label: "Excellent", className: "bg-emerald-100 text-emerald-700 border-emerald-200" }
+    if (percentage >= 50) return { label: "Good", className: "bg-blue-100 text-blue-700 border-blue-200" }
+    if (percentage >= 25) return { label: "Fair", className: "bg-amber-100 text-amber-700 border-amber-200" }
+    return { label: "Needs Improvement", className: "bg-slate-100 text-slate-700 border-slate-200" }
   }
 
   return (
@@ -308,6 +341,21 @@ export default function StudentProjects() {
                       type="date"
                       value={newProject.endDate}
                       onChange={(e) => setNewProject({ ...newProject, endDate: e.target.value })}
+                    />
+                  </div>
+                )}
+                {(newProject.status === "completed" || newProject.status === "ongoing") && (
+                  <div className="space-y-2">
+                    <Label htmlFor="score">Project Score (0-10)</Label>
+                    <Input
+                      id="score"
+                      type="number"
+                      min="0"
+                      max="10"
+                      step="0.1"
+                      placeholder="Enter score (0-10)"
+                      value={newProject.score || ""}
+                      onChange={(e) => setNewProject({ ...newProject, score: e.target.value ? parseFloat(e.target.value) : undefined })}
                     />
                   </div>
                 )}
@@ -433,6 +481,21 @@ export default function StudentProjects() {
                     />
                   </div>
                 )}
+                {(editingProject.status === "completed" || editingProject.status === "ongoing") && (
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-score">Project Score (0-10)</Label>
+                    <Input
+                      id="edit-score"
+                      type="number"
+                      min="0"
+                      max="10"
+                      step="0.1"
+                      placeholder="Enter score (0-10)"
+                      value={editingProject.score || ""}
+                      onChange={(e) => setEditingProject({ ...editingProject, score: e.target.value ? parseFloat(e.target.value) : undefined })}
+                    />
+                  </div>
+                )}
                 <div className="flex justify-end gap-2">
                   <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
                     Cancel
@@ -446,6 +509,51 @@ export default function StudentProjects() {
           </DialogContent>
         </Dialog>
 
+        {/* Project Score Overview */}
+        <Card className="bg-gradient-to-r from-purple-50 to-blue-50 border-purple-100">
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <Trophy className="h-5 w-5 text-purple-600" />
+              </div>
+              <div>
+                <CardTitle className="text-xl text-purple-800">Project Portfolio Score</CardTitle>
+                <CardDescription>Your overall project performance and achievements</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="text-center p-4 bg-white rounded-lg shadow-sm border border-purple-100">
+                <div className="text-2xl font-bold text-purple-600">{totalProjectScore}/{maxPossibleScore}</div>
+                <p className="text-sm text-muted-foreground">Total Points</p>
+              </div>
+              <div className="text-center p-4 bg-white rounded-lg shadow-sm border border-blue-100">
+                <div className="text-2xl font-bold text-blue-600">{averageProjectScore.toFixed(1)}/10</div>
+                <p className="text-sm text-muted-foreground">Average Score</p>
+              </div>
+              <div className="text-center p-4 bg-white rounded-lg shadow-sm border border-green-100">
+                <div className="text-2xl font-bold text-green-600">{scoredProjects.length}</div>
+                <p className="text-sm text-muted-foreground">Scored Projects</p>
+              </div>
+              <div className="text-center p-4 bg-white rounded-lg shadow-sm border border-amber-100">
+                <div className="text-2xl font-bold text-amber-600">{projects.filter(p => p.status === "planned").length}</div>
+                <p className="text-sm text-muted-foreground">Planned Projects</p>
+              </div>
+            </div>
+            
+            {maxPossibleScore > 0 && (
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium">Portfolio Progress</span>
+                  <span className="text-sm text-muted-foreground">{Math.round((totalProjectScore / maxPossibleScore) * 100)}%</span>
+                </div>
+                <Progress value={(totalProjectScore / maxPossibleScore) * 100} className="h-3" />
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card>
@@ -454,7 +562,7 @@ export default function StudentProjects() {
               <FolderOpen className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{projects.length}</div>
+              <div className="text-2xl font-bold">{totalProjects}</div>
               <p className="text-xs text-muted-foreground">All time</p>
             </CardContent>
           </Card>
@@ -465,9 +573,7 @@ export default function StudentProjects() {
               <Calendar className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">
-                {projects.filter((p) => p.status === "completed").length}
-              </div>
+              <div className="text-2xl font-bold text-green-600">{completedProjects.length}</div>
               <p className="text-xs text-muted-foreground">Finished projects</p>
             </CardContent>
           </Card>
@@ -478,9 +584,7 @@ export default function StudentProjects() {
               <Code className="h-4 w-4 text-blue-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-blue-600">
-                {projects.filter((p) => p.status === "ongoing").length}
-              </div>
+              <div className="text-2xl font-bold text-blue-600">{ongoingProjects.length}</div>
               <p className="text-xs text-muted-foreground">Active projects</p>
             </CardContent>
           </Card>
@@ -508,6 +612,27 @@ export default function StudentProjects() {
                     ))}
                   </div>
                 </div>
+
+                {/* Project Score Display */}
+                {project.score !== undefined && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Target className="h-3 w-3" />
+                        <span className="text-sm font-medium">Project Score</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className={`text-lg font-bold ${getScoreColor(project.score)}`}>
+                          {project.score}/10
+                        </span>
+                        <Badge className={getScoreBadge(project.score).className}>
+                          {getScoreBadge(project.score).label}
+                        </Badge>
+                      </div>
+                    </div>
+                    <Progress value={(project.score / 10) * 100} className="h-2" />
+                  </div>
+                )}
 
                 <div className="text-sm text-muted-foreground">
                   <div className="flex items-center gap-2">
@@ -555,25 +680,24 @@ export default function StudentProjects() {
                   {/* Edit and Delete Buttons */}
                   <div className="flex gap-2">
                     <Button 
-  size="sm" 
-  variant="secondary" 
-  className="flex-1 bg-gray-100 text-gray-700 hover:bg-gray-200"
-  onClick={() => openEditDialog(project)}
->
-  <Edit className="h-3 w-3 mr-1" />
-  Edit
-</Button>
+                      size="sm" 
+                      variant="secondary" 
+                      className="flex-1 bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      onClick={() => openEditDialog(project)}
+                    >
+                      <Edit className="h-3 w-3 mr-1" />
+                      Edit
+                    </Button>
 
-<Button 
-  size="sm" 
-  variant="destructive" 
-  className="flex-1 bg-red-100 text-red-700 hover:bg-red-200"
-  onClick={() => handleDeleteProject(project.id)}
->
-  <Trash2 className="h-3 w-3 mr-1" />
-  Delete
-</Button>
-
+                    <Button 
+                      size="sm" 
+                      variant="destructive" 
+                      className="flex-1 bg-red-100 text-red-700 hover:bg-red-200"
+                      onClick={() => handleDeleteProject(project.id)}
+                    >
+                      <Trash2 className="h-3 w-3 mr-1" />
+                      Delete
+                    </Button>
                   </div>
                 </div>
               </CardContent>
