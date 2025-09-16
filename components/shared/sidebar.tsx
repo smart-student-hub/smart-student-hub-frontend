@@ -28,7 +28,7 @@ import {
   X,
 } from "lucide-react"
 
-export type UserRole = "admin" | "hei" | "student" | "faculty" | "recruiter"
+export type UserRole = "admin" | "university" | "student" | "faculty" | "recruiter"
 
 interface SidebarProps {
   role: UserRole
@@ -50,12 +50,12 @@ const roleNavigation: Record<UserRole, NavItem[]> = {
     { title: "Analytics", href: "/admin/analytics", icon: BarChart3 },
     { title: "Settings", href: "/admin/settings", icon: Settings },
   ],
-  hei: [
+  university: [
     { title: "Dashboard", href: "/institutes", icon: LayoutDashboard },
     { title: "Students", href: "/institutes/students", icon: Users },
     { title: "Faculty", href: "/institutes/faculty", icon: UserPlus },
+    { title: "Assignment", href: "/institutes/assignment", icon: FileText },
     { title: "Analytics", href: "/institutes/analytics", icon: BarChart3 },
-    { title: "Reports", href: "/institutes/reports", icon: FileText },
     { title: "Settings", href: "/institutes/settings", icon: Settings },
   ],
   student: [
@@ -85,7 +85,7 @@ const roleNavigation: Record<UserRole, NavItem[]> = {
 
 const roleLabels: Record<UserRole, string> = {
   admin: "Administrator",
-  hei: "HEI Staff",
+  university: "University Staff",
   student: "Student",
   faculty: "Faculty",
   recruiter: "Recruiter",

@@ -77,7 +77,7 @@ export function InstituteFaculty() {
   const unassignedStudents = students.filter(s => !faculty.some(f => f.assignedStudents?.includes(s.id)));
 
   return (
-    <DashboardLayout role = "hei" currentPage="Manage Faculty">
+    <DashboardLayout role = "university" currentPage="Manage Faculty">
       <div className="space-y-6">
         {/* Header with Actions */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
