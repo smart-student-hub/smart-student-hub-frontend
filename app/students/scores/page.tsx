@@ -122,12 +122,12 @@ export default function StudentScores() {
           />
         </div>
 
-        {/* Detailed Scores - Two Separate Cards */}
-        <div className="grid md:grid-cols-2 gap-6">
+  {/* Detailed Scores - Two Separate Cards */}
+  <div id="technical-domains" className="grid md:grid-cols-2 gap-6">
           {/* Left Column Card */}
           <Card>
             <CardHeader>
-              <CardTitle>Technical Domains (1-5)</CardTitle>
+              <CardTitle>Technical Domains </CardTitle>
               <CardDescription>Your performance in core technical areas</CardDescription>
             </CardHeader>
             <CardContent>
@@ -162,7 +162,7 @@ export default function StudentScores() {
           {/* Right Column Card */}
           <Card>
             <CardHeader>
-              <CardTitle>Technical Domains (6-10)</CardTitle>
+              <CardTitle>Technical Domains </CardTitle>
               <CardDescription>Your performance in specialized technical areas</CardDescription>
             </CardHeader>
             <CardContent>

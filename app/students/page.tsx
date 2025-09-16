@@ -1,3 +1,4 @@
+"use client";
 import { DashboardLayout } from "@/components/shared/dashboard-layout";
 import { DashboardCard } from "@/components/shared/dashboardCard";
 import { Progress } from "@/components/ui/progress";
@@ -5,8 +6,10 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { GraduationCap, TrendingUp, Calendar, Award } from "lucide-react";
 import { dummyStudents, currentUser } from "@/lib/mock-data";
+import { useRouter } from "next/navigation";
 
 export default function StudentDashboard() {
+  const router = useRouter();
   // TODO: Replace with API call -> GET /api/students/current
   const student = dummyStudents.find(s => s.email === currentUser.email);
   
@@ -18,7 +21,7 @@ export default function StudentDashboard() {
     .slice(0, 3);
 
   return (
-    <DashboardLayout currentPage="Dashboard" role={"student"} children={undefined}>
+  <DashboardLayout currentPage="Dashboard" role={"student"}>
       <div className="space-y-6">
         {/* Key Metrics */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -54,8 +57,14 @@ export default function StudentDashboard() {
         <div className="grid gap-6 md:grid-cols-2">
           {/* Domain Scores */}
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Top Domain Scores</CardTitle>
+              <button
+                className="px-3 py-1 text-sm font-medium rounded-md bg-accent text-accent-foreground hover:bg-accent/80 transition-colors"
+                onClick={() => router.push("/students/scores#technical-domains")}
+              >
+                See All Scores
+              </button>
             </CardHeader>
             <CardContent className="space-y-4">
               {topDomains.map(([domain, score]) => (
@@ -110,18 +119,20 @@ export default function StudentDashboard() {
             <CardTitle>Quick Actions</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-4 md:grid-cols-3">
-              <div className="p-4 border border-card-border rounded-lg hover:bg-accent cursor-pointer transition-colors">
+            <div className="grid gap-4 md:grid-cols-2">
+              <div
+                className="p-4 border border-card-border rounded-lg hover:bg-accent cursor-pointer transition-colors"
+                onClick={() => router.push("/students/activities")}
+              >
                 <h4 className="font-medium text-text-primary">Add Achievement</h4>
                 <p className="text-sm text-text-muted mt-1">Record a new activity or achievement</p>
               </div>
-              <div className="p-4 border border-card-border rounded-lg hover:bg-accent cursor-pointer transition-colors">
+              <div
+                className="p-4 border border-card-border rounded-lg hover:bg-accent cursor-pointer transition-colors"
+                onClick={() => router.push("/students/profile")}
+              >
                 <h4 className="font-medium text-text-primary">Update Portfolio</h4>
                 <p className="text-sm text-text-muted mt-1">Enhance your digital portfolio</p>
-              </div>
-              <div className="p-4 border border-card-border rounded-lg hover:bg-accent cursor-pointer transition-colors">
-                <h4 className="font-medium text-text-primary">View Reports</h4>
-                <p className="text-sm text-text-muted mt-1">Download progress reports</p>
               </div>
             </div>
           </CardContent>

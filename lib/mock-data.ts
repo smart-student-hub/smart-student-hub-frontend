@@ -42,13 +42,18 @@ export interface Student {
 }
 
 export interface Achievement {
-  id: number
-  title: string
-  category: "academic" | "extracurricular" | "research" | "community_service" | "internship" | "community" | "sports" | "leadership"
-  description: string
-  date: string
-  status: "pending" | "approved" | "rejected"
-  points: number
+  id: number;
+  title: string;
+  category: string;
+  description: string;
+  organization?: string;
+  organizationLevel?: string;
+  competitionStage?: string;
+  certificate?: File | undefined;
+  date: string;
+  certificateType?: string;
+  status: "pending" | "approved" | "rejected";
+  points: number;
 }
 
 export interface Project {

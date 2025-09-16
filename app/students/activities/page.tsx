@@ -24,22 +24,62 @@ import { Plus, Award, CheckCircle, Clock, X, Filter } from "lucide-react"
 export default function StudentActivities() {
   // TODO: Replace with API call -> GET /api/students/current/achievements
   const currentStudent = dummyStudents[0]
+  const [achievements, setAchievements] = useState(currentStudent.achievements)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [filterCategory, setFilterCategory] = useState<string>('all')
   const [filterStatus, setFilterStatus] = useState<string>('all')
   const [searchTerm, setSearchTerm] = useState('')
-  const [newAchievement, setNewAchievement] = useState({
+  const [newAchievement, setNewAchievement] = useState<{
+    title: string;
+    category: string;
+    description: string;
+    organization: string;
+    organizationLevel: string;
+    competitionStage: string;
+    certificate: File | undefined;
+    dateAwarded: string;
+    certificateType: string;
+  }>({
     title: "",
     category: "",
     description: "",
-    date: "",
-  })
+    organization: "",
+    organizationLevel: "",
+    competitionStage: "",
+    certificate: undefined,
+    dateAwarded: "",
+    certificateType: "",
+  });
 
   const handleAddAchievement = () => {
-    // TODO: Replace with API call -> POST /api/achievements
-    console.log("Adding achievement:", newAchievement)
+    // Add new achievement to state
+    const achievementToAdd = {
+      id: Date.now(),
+      title: newAchievement.title,
+      category: newAchievement.category,
+      description: newAchievement.description,
+      organization: newAchievement.organization,
+      organizationLevel: newAchievement.organizationLevel,
+      competitionStage: newAchievement.competitionStage,
+      certificate: newAchievement.certificate,
+      date: newAchievement.dateAwarded,
+      certificateType: newAchievement.certificateType,
+      status: "pending",
+      points: 0,
+    }
+    setAchievements(prev => [...prev, achievementToAdd])
     setIsAddDialogOpen(false)
-    setNewAchievement({ title: "", category: "", description: "", date: "" })
+    setNewAchievement({
+      title: "",
+      category: "",
+      description: "",
+      organization: "",
+      organizationLevel: "",
+      competitionStage: "",
+      certificate: undefined,
+      dateAwarded: "",
+      certificateType: "",
+    })
   }
 
   const getStatusIcon = (status: string) => {
@@ -109,37 +149,8 @@ export default function StudentActivities() {
     },
   ]
 
-  // Mock additional achievements for demonstration
-  const allAchievements = [
-    ...currentStudent.achievements,
-    {
-      id: 2,
-      title: "Hackathon Participation",
-      category: "extracurricular",
-      description: "Participated in 48-hour coding hackathon",
-      date: "2024-02-15",
-      status: "pending",
-      points: 30,
-    },
-    {
-      id: 3,
-      title: "Research Paper",
-      category: "research",
-      description: "Co-authored paper on machine learning applications",
-      date: "2024-01-20",
-      status: "approved",
-      points: 45,
-    },
-    {
-      id: 4,
-      title: "Community Service",
-      category: "community_service",
-      description: "Volunteered at local coding bootcamp",
-      date: "2024-01-10",
-      status: "rejected",
-      points: 0,
-    },
-  ]
+  // Use state for achievements
+  const allAchievements = achievements
 
   const filteredActivities = allAchievements.filter(activity => {
     const matchesCategory = filterCategory === 'all' || activity.category === filterCategory;
@@ -223,7 +234,7 @@ export default function StudentActivities() {
                     Add Achievement
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-[425px]">
+                <DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>Add New Achievement</DialogTitle>
                     <DialogDescription>
@@ -231,8 +242,27 @@ export default function StudentActivities() {
                     </DialogDescription>
                   </DialogHeader>
                   <div className="space-y-4">
+                    {/* Category */}
                     <div className="space-y-2">
-                      <Label htmlFor="title">Achievement Title</Label>
+                      <Label htmlFor="category">Category</Label>
+                      <Select
+                        id="category"
+                        value={newAchievement.category}
+                        onValueChange={(value: string) => setNewAchievement({ ...newAchievement, category: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="technical">Technical</SelectItem>
+                          <SelectItem value="sports">Sports</SelectItem>
+                          <SelectItem value="arts">Arts</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    {/* Title */}
+                    <div className="space-y-2">
+                      <Label htmlFor="title">Title</Label>
                       <Input
                         id="title"
                         placeholder="Enter achievement title"
@@ -240,11 +270,88 @@ export default function StudentActivities() {
                         onChange={(e) => setNewAchievement({ ...newAchievement, title: e.target.value })}
                       />
                     </div>
+                    {/* Organization */}
+                    <div className="space-y-2">
+                      <Label htmlFor="organization">Organization</Label>
+                      <Input
+                        id="organization"
+                        placeholder="Enter organization name"
+                        value={newAchievement.organization}
+                        onChange={(e) => setNewAchievement({ ...newAchievement, organization: e.target.value })}
+                      />
+                    </div>
+                    {/* Organization Level */}
+                    <div className="space-y-2">
+                      <Label htmlFor="organizationLevel">Organization Level</Label>
+                      <Select
+                        id="organizationLevel"
+                        value={newAchievement.organizationLevel}
+                        onValueChange={(value: string) => setNewAchievement({ ...newAchievement, organizationLevel: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select level" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="college">College</SelectItem>
+                          <SelectItem value="state">State</SelectItem>
+                          <SelectItem value="national">National</SelectItem>
+                          <SelectItem value="international">International</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    {/* Competition Stage */}
+                    <div className="space-y-2">
+                      <Label htmlFor="competitionStage">Competition Stage</Label>
+                      <Select
+                        id="competitionStage"
+                        value={newAchievement.competitionStage}
+                        onValueChange={(value: string) => setNewAchievement({ ...newAchievement, competitionStage: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select stage" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="participant">Participant</SelectItem>
+                          <SelectItem value="organizer">Organizer</SelectItem>
+                          <SelectItem value="winner">Winner</SelectItem>
+                          <SelectItem value="other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    {/* Certificate Upload */}
+                    <div className="space-y-2">
+                      <Label htmlFor="certificate">Certificate</Label>
+                      <Input
+                        id="certificate"
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        onChange={(e) => setNewAchievement({ ...newAchievement, certificate: e.target.files?.[0] })}
+                      />
+                    </div>
+                    {/* Certificate Type */}
+                    <div className="space-y-2">
+                      <Label htmlFor="certificateType">Certificate Type</Label>
+                      <Select
+                        id="certificateType"
+                        value={newAchievement.certificateType}
+                        onValueChange={(value: string) => setNewAchievement({ ...newAchievement, certificateType: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select certificate type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="conference">Conference</SelectItem>
+                          <SelectItem value="workshop">Workshop</SelectItem>
+                          <SelectItem value="course">Course</SelectItem>
+                          <SelectItem value="other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                     <div className="space-y-2">
                       <Label htmlFor="category">Category</Label>
                       <Select
                         value={newAchievement.category}
-                        onValueChange={(value) => setNewAchievement({ ...newAchievement, category: value })}
+                        onValueChange={(value: string) => setNewAchievement({ ...newAchievement, category: value })}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select category" />
@@ -265,8 +372,8 @@ export default function StudentActivities() {
                       <Input
                         id="date"
                         type="date"
-                        value={newAchievement.date}
-                        onChange={(e) => setNewAchievement({ ...newAchievement, date: e.target.value })}
+                        value={newAchievement.dateAwarded}
+                        onChange={(e) => setNewAchievement({ ...newAchievement, dateAwarded: e.target.value })}
                       />
                     </div>
                     <div className="space-y-2">
