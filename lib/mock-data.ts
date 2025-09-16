@@ -97,7 +97,7 @@ export const mockUsers: User[] = [
 export const dummyStudents: Student[] = [
   {
     id: 1,
-    name: "Alice Johnson",
+    name: cookies.get("username") || "default name",
     email: "alice.johnson@university.edu",
     cgpa: 8.5,
     attendance: 92,

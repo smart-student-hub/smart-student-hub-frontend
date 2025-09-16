@@ -45,6 +45,9 @@ export default function LoginPage() {
         if (formData.role === "faculty") {
           window.location.href = "/faculty/dashboard"
         }
+        if (formData.role === "student") {
+          window.location.href = "/students/dashboard"
+        }
       } else {
         alert("Login failed: invalid credentials or role")
       }

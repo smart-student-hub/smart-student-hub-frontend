@@ -1,3 +1,7 @@
+"use client";
+import cookies from "js-cookie";
+import{ useState } from "react";
+import { useEffect } from "react";
 import { DashboardLayout } from "@/components/shared/dashboard-layout";
 import { DashboardCard } from "@/components/shared/dashboardCard";
 import { Progress } from "@/components/ui/progress";
@@ -24,11 +28,19 @@ import {
 } from "lucide-react";
 import { dummyStudents, currentUser } from "@/lib/mock-data";
 
+
 export default function StudentDashboard() {
   // TODO: Replace with API call -> GET /api/students/current
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const student = dummyStudents.find(s => s.email === currentUser.email);
-  
   if (!student) return <div>Student not found</div>;
+  const [displayName, setDisplayName] = useState("defa");
+
+  useEffect(() => {
+    const username = cookies.get("username");
+    if (username) setDisplayName(username);
+  }, []);
+
 
   const recentActivities = student.achievements.slice(0, 3);
   const topDomains = Object.entries(student.domains)
@@ -58,7 +70,7 @@ export default function StudentDashboard() {
             <div className="flex items-center justify-between">
               <div className="space-y-2">
                 <h1 className="text-3xl font-bold tracking-tight">
-                  Welcome back, {student.name.split(' ')[0]} 👋
+                  Welcome back, {displayName} 👋
                 </h1>
                 <p className="text-slate-300 text-lg">
                   Ready to conquer your academic journey today?
@@ -321,6 +333,7 @@ export default function StudentDashboard() {
           <CardContent>
             <div className="grid gap-4 md:grid-cols-3">
               <div className="group relative overflow-hidden p-6 border-2 border-dashed border-slate-200 rounded-2xl hover:border-emerald-300 hover:bg-emerald-50/30 cursor-pointer transition-all duration-300">
+                
                 <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-teal-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
                 <div className="relative space-y-3">
                   <div className="flex items-center justify-between">
