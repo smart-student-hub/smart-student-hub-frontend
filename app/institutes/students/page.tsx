@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Search, Filter } from "lucide-react";
-import { Student, Faculty } from "@/lib/mock-data";
+import { Student, Faculty, dummyStudents, dummyFaculty } from "@/lib/mock-data";
 
 export function InstituteStudents() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -18,13 +18,13 @@ export function InstituteStudents() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
   // TODO: Replace with API call -> GET /api/institutes/students
-  const students = Student;
-  const faculty = Faculty;
+  const students = dummyStudents;
+  const faculty = dummyFaculty;
 
   const filteredStudents = students.filter(student => {
     const matchesSearch = student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          student.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const batchString = `${student.batchYear}-${student.batchYear + 4}`;
+    const batchString = `${student.batch}-${student.batch + 4}`;
     const matchesBatch = filterBatch === "all" || batchString === filterBatch;
     return matchesSearch && matchesBatch;
   });
@@ -56,10 +56,10 @@ export function InstituteStudents() {
     setIsAddDialogOpen(false);
   };
 
-  const batches = [...new Set(students.map(s => `${s.batchYear}-${s.batchYear + 4}`))];
+  const batches = [...new Set(students.map(s => `${s.batch}-${s.batch + 4}`))];
 
   return (
-    <DashboardLayout currentPageName="Manage Students">
+    <DashboardLayout role="university" currentPage="Manage Students">
       <div className="space-y-6">
         {/* Header with Actions */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -186,3 +186,5 @@ export function InstituteStudents() {
     </DashboardLayout>
   );
 }
+
+export default InstituteStudents;
