@@ -1,5 +1,7 @@
 "use client"
-
+import { useState } from "react"
+import { useEffect } from "react"
+import cookies from "js-cookie"
 import { DashboardLayout } from "@/components/shared/dashboard-layout"
 import { DataTable } from "@/components/shared/data-table"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -19,103 +21,136 @@ import { Users, Eye, MessageCircle, Award, BookOpen, TrendingUp, Calendar } from
 
 export default function FacultyStudents() {
   // TODO: Replace with API call -> GET /api/faculty/current/students
-  const currentFaculty = dummyFaculty[0]
-  const assignedStudents = dummyStudents.filter((student) => currentFaculty.assignedStudents.includes(student.id))
+  const [assignedStudents, setAssignedStudents] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  useEffect(() => {
+  async function fetchStudents() {
+    try {
+      const role = cookies.get("role") // get role from cookie
+      const res = await fetch("http://127.0.0.1:8000/api/faculty/students", {
+        headers: {
+          "Content-Type": "application/json",
+          "X-User-Role": role || "",  // send role as a custom header
+          "X-User-Name": cookies.get("username") || "", // send username from cookie
+        },
+      })
+      if (!res.ok) throw new Error("Failed to fetch students")
+      const data = await res.json()
+      setAssignedStudents(data)
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  fetchStudents()
+}, [])
 
   const columns = [
-    {
-      key: "name",
-      label: "Student",
-      sortable: true,
-      render: (value: string, row: any) => (
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 bg-accent rounded-full flex items-center justify-center">
-            <span className="text-sm font-medium text-accent-foreground">
-              {value
-                .split(" ")
-                .map((n) => n[0])
-                .join("")}
-            </span>
-          </div>
-          <div>
-            <div className="font-medium">{value}</div>
-            <div className="text-sm text-muted-foreground">{row.email}</div>
-          </div>
+  {
+    key: "name",
+    label: "Student",
+    sortable: true,
+    render: (value: string, row: any) => (
+      <div className="flex items-center gap-3">
+        <div className="h-10 w-10 bg-accent rounded-full flex items-center justify-center">
+          <span className="text-sm font-medium text-accent-foreground">
+            {value
+              .split(" ")
+              .map((n) => n[0])
+              .join("")}
+          </span>
         </div>
-      ),
-    },
-    {
-      key: "batch",
-      label: "Batch",
-      sortable: true,
-      render: (value: string) => <Badge variant="outline">{value}</Badge>,
-    },
-    {
-      key: "hsi",
-      label: "HSI Score",
-      sortable: true,
-      render: (value: number) => (
-        <div className="flex items-center gap-2">
-          <span className="font-medium">{value}</span>
-          <div className="w-16 h-2 bg-muted rounded-full">
-            <div className="h-full bg-accent rounded-full" style={{ width: `${value}%` }} />
-          </div>
+        <div>
+          <div className="font-medium">{value}</div>
+          <div className="text-sm text-muted-foreground">{row.email || "N/A"}</div>
         </div>
-      ),
-    },
-    {
-      key: "cgpa",
-      label: "CGPA",
-      sortable: true,
-      render: (value: number) => <span className="font-medium">{value}/10.0</span>,
-    },
-    {
-      key: "attendance",
-      label: "Attendance",
-      sortable: true,
-      render: (value: number) => (
-        <div className="flex items-center gap-2">
-          <span className="font-medium">{value}%</span>
-          <div className="w-16 h-2 bg-muted rounded-full">
-            <div
-              className={`h-full rounded-full ${value >= 90 ? "bg-green-500" : value >= 75 ? "bg-yellow-500" : "bg-red-500"}`}
-              style={{ width: `${value}%` }}
-            />
-          </div>
+      </div>
+    ),
+  },
+  {
+    key: "roll_number",
+    label: "Roll No",
+    sortable: true,
+  },
+  {
+    key: "year",
+    label: "Year",
+    sortable: true,
+  },
+  {
+    key: "section",
+    label: "Section",
+    sortable: true,
+  },
+  {
+    key: "department",
+    label: "Department",
+    sortable: true,
+  },
+  {
+    key: "hsi",
+    label: "HSI Score",
+    sortable: true,
+    render: (value: any, row: any) => (
+      <div className="flex items-center gap-2">
+        <span className="font-medium">{row.hsi || 0}</span>
+        <div className="w-16 h-2 bg-muted rounded-full">
+          <div className="h-full bg-accent rounded-full" style={{ width: `${row.hsi || 0}%` }} />
         </div>
-      ),
-    },
-    {
-      key: "achievements",
-      label: "Achievements",
-      render: (value: any[]) => <span className="font-medium">{value.length}</span>,
-    },
-    {
-      key: "actions",
-      label: "Actions",
-      render: (value: any, row: any) => (
-        <div className="flex items-center gap-2">
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button size="sm" variant="outline">
-                <Eye className="h-3 w-3" />
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[600px]">
-              <DialogHeader>
-                <DialogTitle>{row.name} - Student Details</DialogTitle>
-                <DialogDescription>Comprehensive view of student performance and activities</DialogDescription>
-              </DialogHeader>
-              <StudentDetailView student={row} />
-            </DialogContent>
-          </Dialog>
-          <Button size="sm" variant="outline">
-            <MessageCircle className="h-3 w-3" />
-          </Button>
+      </div>
+    ),
+  },
+  {
+    key: "attendance",
+    label: "Attendance",
+    sortable: true,
+    render: (value: any, row: any) => (
+      <div className="flex items-center gap-2">
+        <span className="font-medium">{row.attendance || 0}%</span>
+        <div className="w-16 h-2 bg-muted rounded-full">
+          <div
+            className={`h-full rounded-full ${
+              (row.attendance || 0) >= 90
+                ? "bg-green-500"
+                : (row.attendance || 0) >= 75
+                ? "bg-yellow-500"
+                : "bg-red-500"
+            }`}
+            style={{ width: `${row.attendance || 0}%` }}
+          />
         </div>
-      ),
-    },
-  ]
+      </div>
+    ),
+  },
+  {
+    key: "actions",
+    label: "Actions",
+    render: (value: any, row: any) => (
+      <div className="flex items-center gap-2">
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button size="sm" variant="outline">
+              <Eye className="h-3 w-3" />
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle>{row.name} - Student Details</DialogTitle>
+              <DialogDescription>Comprehensive view of student performance and activities</DialogDescription>
+            </DialogHeader>
+            <StudentDetailView student={row} />
+          </DialogContent>
+        </Dialog>
+        <Button size="sm" variant="outline">
+          <MessageCircle className="h-3 w-3" />
+        </Button>
+      </div>
+    ),
+  },
+]
+
 
   return (
     <DashboardLayout role="faculty" currentPage="My Students">
