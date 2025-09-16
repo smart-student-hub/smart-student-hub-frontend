@@ -1,6 +1,6 @@
 // Mock data for the Smart Student Hub application
 // TODO: Replace with API calls to Django REST Framework
-
+import cookies from "js-cookie";
 export interface User {
   id: string;
   email: string;
@@ -511,7 +511,7 @@ export const dummyStudents: Student[] = [
 export const dummyFaculty: Faculty[] = [
   {
     id: 1,
-    name: "Dr. Sarah Wilson",
+    name:cookies.get("username") || "Prof. John Doe",
     email: "sarah.wilson@university.edu",
     department: "Computer Science",
     college: "MIT",

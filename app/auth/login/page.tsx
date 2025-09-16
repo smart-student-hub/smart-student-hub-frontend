@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-
+import cookies from "js-cookie"
 import { useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -14,15 +14,43 @@ import { GraduationCap, Eye, EyeOff } from "lucide-react"
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [formData, setFormData] = useState({
-    email: "",
+    username: "",
     password: "",
     role: "",
   })
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {  // <-- added async
     e.preventDefault()
-    // TODO: Implement authentication logic with Django backend
-    console.log("Login attempt:", formData)
+
+    try {
+      const res = await fetch("http://localhost:8000/api/login/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username: formData.username, // Django uses 'username'
+          password: formData.password,
+        }),
+      })
+
+      const data = await res.json()
+
+      if (res.ok) {
+        const username=data.username; // Assuming the response contains the username
+        const role=formData.role; // Use the selected role from the form
+        cookies.set("username",username,{expires:1})
+        cookies.set("role", role, { expires: 1 }) // Expires in 1 day
+        alert(`Welcome ${data.username}`)
+        if (formData.role === "faculty") {
+          window.location.href = "/faculty/dashboard"
+        }
+      } else {
+        alert("Login failed: invalid credentials or role")
+      }
+    } catch (err) {
+      console.error("Error logging in:", err)
+    }
   }
 
   return (
@@ -64,13 +92,13 @@ export default function LoginPage() {
 
               {/* Email */}
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="Username">Username</Label>
                 <Input
-                  id="email"
-                  type="email"
-                  placeholder="Enter your email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  id="username"
+                  type="username"
+                  placeholder="Enter your username"
+                  value={formData.username}
+                  onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                   required
                   className="bg-muted/50 border-border focus:bg-background"
                 />
@@ -122,7 +150,7 @@ export default function LoginPage() {
               <Button
                 type="submit"
                 className="w-full"
-                disabled={!formData.email || !formData.password || !formData.role}
+                disabled={!formData.username || !formData.password || !formData.role}
               >
                 Sign In
               </Button>

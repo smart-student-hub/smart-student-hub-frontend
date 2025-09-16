@@ -1,5 +1,6 @@
 "use client"
-
+import { useEffect } from "react"
+import cookies from "js-cookie"
 import { useState } from "react"
 import { DashboardLayout } from "@/components/shared/dashboard-layout"
 import { DataTable } from "@/components/shared/data-table"
@@ -19,70 +20,45 @@ import { CheckCircle, X, Clock, Award, MessageSquare } from "lucide-react"
 
 export default function FacultyAchievements() {
   // TODO: Replace with API call -> GET /api/faculty/achievements/pending
-  const [pendingAchievements, setPendingAchievements] = useState([
-    {
-      id: 1,
-      studentName: "Alice Johnson",
-      studentEmail: "alice.johnson@university.edu",
-      title: "Best Project Award",
-      category: "academic",
-      description: "Won first place in annual project competition with AI-powered study assistant",
-      submittedDate: "2024-06-28",
-      points: 50,
-      evidence: "Certificate and project documentation attached",
-      status: "pending",
-    },
-    {
-      id: 2,
-      studentName: "Bob Smith",
-      studentEmail: "bob.smith@university.edu",
-      title: "Hackathon Winner",
-      category: "extracurricular",
-      description: "Won regional hackathon with blockchain-based voting solution",
-      submittedDate: "2024-06-27",
-      points: 40,
-      evidence: "Winner certificate and project demo video",
-      status: "pending",
-    },
-    {
-      id: 3,
-      studentName: "Carol Davis",
-      studentEmail: "carol.davis@university.edu",
-      title: "Research Publication",
-      category: "research",
-      description: "Co-authored paper on machine learning applications in healthcare",
-      submittedDate: "2024-06-25",
-      points: 80,
-      evidence: "Published paper link and citation details",
-      status: "pending",
-    },
-    {
-      id: 4,
-      studentName: "Alice Johnson",
-      studentEmail: "alice.johnson@university.edu",
-      title: "Community Service",
-      category: "community_service",
-      description: "Volunteered 40 hours at local coding bootcamp for underprivileged students",
-      submittedDate: "2024-06-24",
-      points: 25,
-      evidence: "Service hours certificate from organization",
-      status: "pending",
-    },
-  ])
+  const [achievements, setAchievements] = useState<any[]>([])
 
   const [selectedAchievement, setSelectedAchievement] = useState<any>(null)
   const [reviewComment, setReviewComment] = useState("")
+  const [loading, setLoading] = useState(true)
+  useEffect(() => {
+  const fetchAchievements = async () => {
+    setLoading(true)
+    try {
+      const role = cookies.get("role") // get role from cookie
+      const res = await fetch("http://127.0.0.1:8000/api/faculty/achievements/", {
+        headers: {
+          "Content-Type": "application/json",
+          "X-User-Role": role || "",  // send role as a custom header
+        },
+      })
 
+      if (!res.ok) throw new Error("Failed to fetch")
+      const data = await res.json()
+      setAchievements(data)
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  fetchAchievements()
+}, [])
   const handleApprove = (id: number) => {
     // TODO: Replace with API call -> PUT /api/achievements/:id/approve
-    setPendingAchievements((prev) => prev.filter((achievement) => achievement.id !== id))
+    setAchievements((prev) => prev.filter((achievement) => achievement.id !== id))
     console.log("Approved achievement:", id, "Comment:", reviewComment)
     setReviewComment("")
   }
 
   const handleReject = (id: number) => {
     // TODO: Replace with API call -> PUT /api/achievements/:id/reject
-    setPendingAchievements((prev) => prev.filter((achievement) => achievement.id !== id))
+    setAchievements((prev) => prev.filter((achievement) => achievement.id !== id))
     console.log("Rejected achievement:", id, "Comment:", reviewComment)
     setReviewComment("")
   }
@@ -105,74 +81,39 @@ export default function FacultyAchievements() {
   }
 
   const columns = [
-    {
-      key: "studentName",
-      label: "Student",
-      sortable: true,
-      render: (value: string, row: any) => (
-        <div>
-          <div className="font-medium">{value}</div>
-          <div className="text-sm text-muted-foreground">{row.studentEmail}</div>
-        </div>
-      ),
-    },
-    {
-      key: "title",
-      label: "Achievement",
-      sortable: true,
-      render: (value: string) => <span className="font-medium">{value}</span>,
-    },
-    {
-      key: "category",
-      label: "Category",
-      sortable: true,
-      render: (value: string) => <Badge className={getCategoryColor(value)}>{value.replace("_", " ")}</Badge>,
-    },
-    {
-      key: "points",
-      label: "Points",
-      sortable: true,
-      render: (value: number) => <span className="font-medium text-accent">{value}</span>,
-    },
-    {
-      key: "submittedDate",
-      label: "Submitted",
-      sortable: true,
-      render: (value: string) => new Date(value).toLocaleDateString(),
-    },
-    {
-      key: "actions",
-      label: "Actions",
-      render: (value: any, row: any) => (
-        <div className="flex items-center gap-2">
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button size="sm" variant="outline" onClick={() => setSelectedAchievement(row)}>
-                Review
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[600px]">
-              <DialogHeader>
-                <DialogTitle>Review Achievement</DialogTitle>
-                <DialogDescription>
-                  Carefully review the achievement details and provide your decision
-                </DialogDescription>
-              </DialogHeader>
-              {selectedAchievement && (
-                <AchievementReviewDialog
-                  achievement={selectedAchievement}
-                  reviewComment={reviewComment}
-                  setReviewComment={setReviewComment}
-                  onApprove={() => handleApprove(selectedAchievement.id)}
-                  onReject={() => handleReject(selectedAchievement.id)}
-                />
-              )}
-            </DialogContent>
-          </Dialog>
-        </div>
-      ),
-    },
-  ]
+  {
+    key: "student_name",
+    label: "Student",
+    render: (value: string, row: any) => (
+      <div>
+        <div className="font-medium">{value}</div>
+        <div className="text-sm text-muted-foreground">{row.student_id}</div>
+      </div>
+    ),
+  },
+  {
+    key: "title",
+    label: "Achievement",
+    render: (value: string) => <span className="font-medium">{value}</span>,
+  },
+  {
+    key: "category",
+    label: "Category",
+    render: (value: string) => <Badge className={getCategoryColor(value)}>{value}</Badge>,
+  },
+  {
+    key: "certificate_url",
+    label: "Certificate",
+    render: (value: string) => (
+      <a href={value} target="_blank" className="text-blue-600 underline">
+        View PDF
+      </a>
+    ),
+  },
+  // Add other fields similarly
+]
+
+
 
   return (
     <DashboardLayout role="faculty" currentPage="Achievement Reviews">
@@ -184,7 +125,7 @@ export default function FacultyAchievements() {
             <p className="text-muted-foreground">Review and approve student achievement submissions</p>
           </div>
           <Badge variant="outline" className="bg-yellow-50 text-yellow-700">
-            {pendingAchievements.length} Pending Reviews
+            {achievements.length} Pending Reviews
           </Badge>
         </div>
 
@@ -196,7 +137,7 @@ export default function FacultyAchievements() {
               <Clock className="h-4 w-4 text-yellow-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-yellow-600">{pendingAchievements.length}</div>
+              <div className="text-2xl font-bold text-yellow-600">{achievements.length}</div>
               <p className="text-xs text-muted-foreground">Awaiting your review</p>
             </CardContent>
           </Card>
@@ -237,13 +178,13 @@ export default function FacultyAchievements() {
 
         {/* Achievements Table */}
         <DataTable
-          title="Pending Achievement Reviews"
-          data={pendingAchievements}
-          columns={columns}
-          searchable={true}
-          filterable={true}
-          exportable={true}
-        />
+        title="Pending Achievement Reviews"
+        data={achievements}
+        columns={columns}
+        searchable
+        filterable
+        exportable
+/>
       </div>
     </DashboardLayout>
   )
@@ -269,7 +210,8 @@ function AchievementReviewDialog({
         <div>
           <h3 className="font-medium text-lg">{achievement.title}</h3>
           <p className="text-sm text-muted-foreground">
-            Submitted by {achievement.studentName} on {new Date(achievement.submittedDate).toLocaleDateString()}
+            Submitted by {achievement.student_name} on{" "}
+            {new Date(achievement.date_awarded).toLocaleDateString()}
           </p>
         </div>
 
@@ -277,23 +219,35 @@ function AchievementReviewDialog({
           <div>
             <label className="text-sm font-medium">Category</label>
             <div className="mt-1">
-              <Badge className={getCategoryColor(achievement.category)}>{achievement.category.replace("_", " ")}</Badge>
+              <Badge className={getCategoryColor(achievement.category)}>
+                {achievement.category.replace("_", " ")}
+              </Badge>
             </div>
           </div>
           <div>
-            <label className="text-sm font-medium">Points</label>
-            <div className="mt-1 text-lg font-bold text-accent">{achievement.points}</div>
+            <label className="text-sm font-medium">Type</label>
+            <div className="mt-1 text-lg font-bold text-accent">
+              {achievement.achievement_type}
+            </div>
           </div>
         </div>
 
         <div>
           <label className="text-sm font-medium">Description</label>
-          <p className="mt-1 text-sm text-muted-foreground">{achievement.description}</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {achievement.description}
+          </p>
         </div>
 
         <div>
-          <label className="text-sm font-medium">Evidence</label>
-          <p className="mt-1 text-sm text-muted-foreground">{achievement.evidence}</p>
+          <label className="text-sm font-medium">Certificate</label>
+          <a
+            href={achievement.certificate_url}
+            target="_blank"
+            className="mt-1 text-sm text-blue-600 underline"
+          >
+            View PDF
+          </a>
         </div>
       </div>
 
@@ -329,3 +283,4 @@ function AchievementReviewDialog({
     </div>
   )
 }
+

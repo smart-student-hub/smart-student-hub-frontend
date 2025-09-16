@@ -1,5 +1,5 @@
 "use client"
-import cookies from "js-cookie"
+
 import { DashboardLayout } from "@/components/shared/dashboard-layout"
 import { StatCard } from "@/components/shared/stat-card"
 import { ChartCard } from "@/components/shared/chart-card"
@@ -23,8 +23,6 @@ export default function FacultyDashboard() {
     attendance: student.attendance,
   }))
 
-  const username=cookies.get("username");
-  const role=cookies.get("role");
   const monthlyAttendanceData = [
     { month: "Jan", average: 85, target: 90 },
     { month: "Feb", average: 88, target: 90 },
