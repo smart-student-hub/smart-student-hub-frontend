@@ -30,7 +30,7 @@ export function Topbar({ currentPage, showSearch = true, className }: TopbarProp
 
         {/* Center: Title */}
         <div className="hidden md:block">
-          <h2 className="text-2xl font-bold text-foreground">SAMAGRA</h2>
+          <h2 className="text-2xl font-bold text-foreground">SANKALYA</h2>
         </div>
 
         {/* Right: Search and Actions */}
