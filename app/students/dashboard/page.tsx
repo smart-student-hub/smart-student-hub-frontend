@@ -2,6 +2,11 @@
 import cookies from "js-cookie";
 import{ useState } from "react";
 import { useEffect } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
 import { DashboardLayout } from "@/components/shared/dashboard-layout";
 import { DashboardCard } from "@/components/shared/dashboardCard";
 import { Progress } from "@/components/ui/progress";
@@ -32,6 +37,24 @@ import { dummyStudents, currentUser } from "@/lib/mock-data";
 export default function StudentDashboard() {
   // TODO: Replace with API call -> GET /api/students/current
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [newAchievement, setNewAchievement] = useState({
+  category: "",
+  title: "",
+  description: "",
+  organization: "",
+  org_level: "",          // college, state, national, international
+  competition_stage: "",  // participant, organizer, winner, etc.
+  certificate: null as File | null,      // file upload
+  date_awarded: "",
+  certificate_type: "",   // conference, workshop, course, other
+});
+const handleChange = (e: any) => {
+    const { name, value, files } = e.target;
+    setNewAchievement((prev) => ({
+      ...prev,
+      [name]: files ? files[0] : value,
+    }));
+  };
   const student = dummyStudents.find(s => s.email === currentUser.email);
   if (!student) return <div>Student not found</div>;
   const [displayName, setDisplayName] = useState("defa");
@@ -41,7 +64,45 @@ export default function StudentDashboard() {
     if (username) setDisplayName(username);
   }, []);
 
+  const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  const formData = new FormData();
+  formData.append("category", newAchievement.category);
+  formData.append("title", newAchievement.title);
+  formData.append("description", newAchievement.description);
+  formData.append("organization", newAchievement.organization);
+  formData.append("org_level", newAchievement.org_level);
+  formData.append("competition_stage", newAchievement.competition_stage);
+  formData.append("date_awarded", newAchievement.date_awarded);
+  formData.append("achievement_type", newAchievement.certificate_type);
 
+  if (newAchievement.certificate) {
+    formData.append("certificate", newAchievement.certificate);
+  }
+  try {
+    const res = await fetch("http://localhost:8000/api/student/achievements/", {
+      method: "POST",
+      headers: {
+        "X-user-role": "student",  // assuming role is student
+        "X-user-name": displayName   // send username from cookie
+      },
+      body:formData,
+    });
+
+    if (!res.ok) {
+      throw new Error("Failed to save achievement");
+    }
+
+    const saved = await res.json();
+
+    // Update UI instantly
+    student.achievements.unshift(saved);
+    setIsModalOpen(false);
+  } catch (err) {
+    console.error(err);
+    alert("Error saving achievement");
+  }
+};
   const recentActivities = student.achievements.slice(0, 3);
   const topDomains = Object.entries(student.domains)
     .sort(([,a], [,b]) => b - a)
@@ -332,20 +393,90 @@ export default function StudentDashboard() {
           </CardHeader>
           <CardContent>
             <div className="grid gap-4 md:grid-cols-3">
-              <div className="group relative overflow-hidden p-6 border-2 border-dashed border-slate-200 rounded-2xl hover:border-emerald-300 hover:bg-emerald-50/30 cursor-pointer transition-all duration-300">
-                
-                <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-teal-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                <div className="relative space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="p-3 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 group-hover:scale-110 transition-transform shadow-lg">
-                      <Plus className="h-6 w-6 text-white" />
-                    </div>
-                    <ArrowUpRight className="h-5 w-5 text-slate-400 group-hover:text-emerald-500 transition-colors" />
-                  </div>
-                  <h4 className="font-bold text-slate-900 group-hover:text-emerald-700 transition-colors">Add Achievement</h4>
-                  <p className="text-sm text-slate-600 group-hover:text-slate-700">Record a new activity or achievement to boost your profile</p>
-                </div>
+              <Dialog>
+      <DialogTrigger asChild>
+        <div className="group relative overflow-hidden p-6 border-2 border-dashed border-slate-200 rounded-2xl hover:border-emerald-300 hover:bg-emerald-50/30 cursor-pointer transition-all duration-300">
+          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-teal-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+          <div className="relative space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="p-3 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 group-hover:scale-110 transition-transform shadow-lg">
+                <Plus className="h-6 w-6 text-white" />
               </div>
+              <ArrowUpRight className="h-5 w-5 text-slate-400 group-hover:text-emerald-500 transition-colors" />
+            </div>
+            <h4 className="font-bold text-slate-900 group-hover:text-emerald-700 transition-colors">Add Achievement</h4>
+            <p className="text-sm text-slate-600 group-hover:text-slate-700">
+              Record a new activity or achievement to boost your profile
+            </p>
+          </div>
+        </div>
+      </DialogTrigger>
+
+      <DialogContent className="sm:max-w-[600px]">
+        <DialogHeader>
+          <DialogTitle>Add Achievement</DialogTitle>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <Select name="category" onValueChange={(val) => setNewAchievement((prev) => ({ ...prev, category: val }))}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select Category" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="technical">Technical</SelectItem>
+              <SelectItem value="sports">Sports</SelectItem>
+              <SelectItem value="arts">Arts</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Input name="title" placeholder="Title" onChange={handleChange} />
+          <Textarea name="description" placeholder="Description" onChange={handleChange} />
+          <Input name="organization" placeholder="Organization" onChange={handleChange} />
+
+          <Select name="organizationLevel" onValueChange={(val) => setNewAchievement((prev) => ({ ...prev, org_level: val }))}>
+            <SelectTrigger>
+              <SelectValue placeholder="Organization Level" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="college">College</SelectItem>
+              <SelectItem value="state">State</SelectItem>
+              <SelectItem value="national">National</SelectItem>
+              <SelectItem value="international">International</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select name="competitionStage" onValueChange={(val) => setNewAchievement((prev) => ({ ...prev, completion_stage: val }))}>
+            <SelectTrigger>
+              <SelectValue placeholder="Competition Stage" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="participant">Participant</SelectItem>
+              <SelectItem value="organizer">Organizer</SelectItem>
+              <SelectItem value="winner">Winner</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Input type="file" name="certificate" onChange={handleChange} />
+          <Input type="date" name="date_awarded" onChange={handleChange} />
+
+          <Select name="certificateType" onValueChange={(val) => setNewAchievement((prev) => ({ ...prev, certificate_type: val }))}>
+            <SelectTrigger>
+              <SelectValue placeholder="Certificate Type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="conference">Conference</SelectItem>
+              <SelectItem value="workshop">Workshop</SelectItem>
+              <SelectItem value="course">Course</SelectItem>
+              <SelectItem value="other">Other</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Button type="submit" className="w-full">
+            Submit
+          </Button>
+        </form>
+      </DialogContent>
+    </Dialog>
 
               <div className="group relative overflow-hidden p-6 border-2 border-dashed border-slate-200 rounded-2xl hover:border-blue-300 hover:bg-blue-50/30 cursor-pointer transition-all duration-300">
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-cyan-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
