@@ -18,17 +18,15 @@ export default function StudentProfile() {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-
   const [profileData, setProfileData] = useState({
     firstName: currentStudent.name.split(" ")[0],
-    lastName: currentStudent.name.split(" ")[1],
-    email: currentStudent.email,
-    phone: "+1 (555) 123-4567",
-    location: "Cambridge, MA",
+    email: "motupallidheeraj@gmail.com",
+    phone: "+91 9874566666",
+    location: "Kollam, India",
     bio: "Passionate computer science student with interests in AI and web development.",
     college: currentStudent.college,
     batch: currentStudent.batch,
-    studentId: "CS2024001",
+    studentId: "AM.SC.U4CSE23130",
   })
 
   const [passwordData, setPasswordData] = useState({
@@ -299,7 +297,7 @@ export default function StudentProfile() {
                   <div className="h-20 w-20 bg-accent rounded-full flex items-center justify-center mx-auto mb-4">
                     <span className="text-2xl font-bold text-accent-foreground">
                       {profileData.firstName[0]}
-                      {profileData.lastName[0]}
+  
                     </span>
                   </div>
                   <h3 className="font-medium">

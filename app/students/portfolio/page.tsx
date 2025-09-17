@@ -12,11 +12,11 @@ export default function StudentPortfolio() {
   const currentStudent = dummyStudents[0]
 
   const personalInfo = {
-    phone: "+1 (555) 123-4567",
-    location: "Cambridge, MA",
-    website: "https://alice-johnson.dev",
-    linkedin: "https://linkedin.com/in/alice-johnson",
-    github: "https://github.com/alice-johnson",
+    phone: "+91 9845366666",
+    location: "Kollam, India",
+    website: "https://dheeraj-motupalli.dev",
+    linkedin: "https://linkedin.com/in/dheeraj-motupalli",
+    github: "https://github.com/CrownDestro",
   }
 
   const education = {

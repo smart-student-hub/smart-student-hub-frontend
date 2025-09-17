@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import cookies from "js-cookie"
 import { DashboardLayout } from "@/components/shared/dashboard-layout"
 import { DataTable } from "@/components/shared/data-table"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -28,18 +29,94 @@ export default function StudentActivities() {
   const [filterCategory, setFilterCategory] = useState<string>('all')
   const [filterStatus, setFilterStatus] = useState<string>('all')
   const [searchTerm, setSearchTerm] = useState('')
+  const [displayName, setDisplayName] = useState("")
   const [newAchievement, setNewAchievement] = useState({
-    title: "",
     category: "",
+    title: "",
     description: "",
-    date: "",
+    organization: "",
+    org_level: "",          // college, state, national, international
+    competition_stage: "",  // participant, organizer, winner, etc.
+    certificate: null as File | null,      // file upload
+    date_awarded: "",
+    certificate_type: "",   // conference, workshop, course, other
   })
 
-  const handleAddAchievement = () => {
-    // TODO: Replace with API call -> POST /api/achievements
-    console.log("Adding achievement:", newAchievement)
-    setIsAddDialogOpen(false)
-    setNewAchievement({ title: "", category: "", description: "", date: "" })
+  useEffect(() => {
+    const username = cookies.get("username")
+    if (username) setDisplayName(username)
+  }, [])
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value, files } = e.target as HTMLInputElement
+    setNewAchievement((prev) => ({
+      ...prev,
+      [name]: files ? files[0] : value,
+    }))
+  }
+
+  const handleSelectChange = (name: string, value: string) => {
+    setNewAchievement((prev) => ({
+      ...prev,
+      [name]: value,
+    }))
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    const formData = new FormData()
+    formData.append("category", newAchievement.category)
+    formData.append("title", newAchievement.title)
+    formData.append("description", newAchievement.description)
+    formData.append("organization", newAchievement.organization)
+    formData.append("org_level", newAchievement.org_level)
+    formData.append("competition_stage", newAchievement.competition_stage)
+    formData.append("date_awarded", newAchievement.date_awarded)
+    formData.append("achievement_type", newAchievement.certificate_type)
+
+    if (newAchievement.certificate) {
+      formData.append("certificate", newAchievement.certificate)
+    }
+    
+    try {
+      const res = await fetch("http://localhost:8000/api/student/achievements/", {
+        method: "POST",
+        headers: {
+          "X-user-role": "student",
+          "X-user-name": displayName
+        },
+        body: formData,
+      })
+
+      if (!res.ok) {
+        throw new Error("Failed to save achievement")
+      }
+
+      const saved = await res.json()
+
+      // Update UI instantly - you might want to refresh the data from the server instead
+      // currentStudent.achievements.unshift(saved)
+      
+      setIsAddDialogOpen(false)
+      setNewAchievement({ 
+        category: "",
+        title: "", 
+        description: "", 
+        organization: "",
+        org_level: "",
+        competition_stage: "",
+        certificate: null,
+        date_awarded: "",
+        certificate_type: ""
+      })
+      
+      // Optional: Show success message
+      alert("Achievement submitted successfully!")
+      
+    } catch (err) {
+      console.error(err)
+      alert("Error saving achievement")
+    }
   }
 
   const getStatusIcon = (status: string) => {
@@ -156,8 +233,6 @@ export default function StudentActivities() {
   return (
     <DashboardLayout role="student" currentPage="Activities & Achievements">
       <div className="space-y-6">
-
-
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <Card>
@@ -223,69 +298,161 @@ export default function StudentActivities() {
                     Add Achievement
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-[425px]">
+                <DialogContent className="sm:max-w-[600px] max-h-[85vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>Add New Achievement</DialogTitle>
                     <DialogDescription>
                       Record a new activity or achievement for approval.
                     </DialogDescription>
                   </DialogHeader>
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="title">Achievement Title</Label>
-                      <Input
-                        id="title"
-                        placeholder="Enter achievement title"
-                        value={newAchievement.title}
-                        onChange={(e) => setNewAchievement({ ...newAchievement, title: e.target.value })}
-                      />
-                    </div>
+                  <form onSubmit={handleSubmit} className="space-y-4 pb-4">
                     <div className="space-y-2">
                       <Label htmlFor="category">Category</Label>
                       <Select
                         value={newAchievement.category}
-                        onValueChange={(value) => setNewAchievement({ ...newAchievement, category: value })}
+                        onValueChange={(value) => handleSelectChange("category", value)}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select category" />
                         </SelectTrigger>
                         <SelectContent>
+                          <SelectItem value="technical">Technical</SelectItem>
+                          <SelectItem value="sports">Sports</SelectItem>
+                          <SelectItem value="arts">Arts</SelectItem>
                           <SelectItem value="academic">Academic</SelectItem>
                           <SelectItem value="extracurricular">Extracurricular</SelectItem>
                           <SelectItem value="research">Research</SelectItem>
                           <SelectItem value="community_service">Community Service</SelectItem>
                           <SelectItem value="internship">Internship</SelectItem>
-                          <SelectItem value="sports">Sports</SelectItem>
                           <SelectItem value="leadership">Leadership</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
+                    
                     <div className="space-y-2">
-                      <Label htmlFor="date">Date</Label>
+                      <Label htmlFor="title">Achievement Title</Label>
                       <Input
-                        id="date"
-                        type="date"
-                        value={newAchievement.date}
-                        onChange={(e) => setNewAchievement({ ...newAchievement, date: e.target.value })}
+                        id="title"
+                        name="title"
+                        placeholder="Enter achievement title"
+                        value={newAchievement.title}
+                        onChange={handleChange}
+                        required
                       />
                     </div>
+
                     <div className="space-y-2">
                       <Label htmlFor="description">Description</Label>
                       <Textarea
                         id="description"
+                        name="description"
                         placeholder="Describe your achievement in detail"
                         value={newAchievement.description}
-                        onChange={(e) => setNewAchievement({ ...newAchievement, description: e.target.value })}
+                        onChange={handleChange}
                         rows={3}
+                        required
                       />
                     </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="organization">Organization</Label>
+                      <Input
+                        id="organization"
+                        name="organization"
+                        placeholder="Organization name"
+                        value={newAchievement.organization}
+                        onChange={handleChange}
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="org_level">Organization Level</Label>
+                      <Select
+                        value={newAchievement.org_level}
+                        onValueChange={(value) => handleSelectChange("org_level", value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select organization level" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="college">College</SelectItem>
+                          <SelectItem value="state">State</SelectItem>
+                          <SelectItem value="national">National</SelectItem>
+                          <SelectItem value="international">International</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="competition_stage">Competition Stage</Label>
+                      <Select
+                        value={newAchievement.competition_stage}
+                        onValueChange={(value) => handleSelectChange("competition_stage", value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select competition stage" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="participant">Participant</SelectItem>
+                          <SelectItem value="organizer">Organizer</SelectItem>
+                          <SelectItem value="winner">Winner</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="certificate">Certificate</Label>
+                      <Input
+                        id="certificate"
+                        name="certificate"
+                        type="file"
+                        onChange={handleChange}
+                        accept=".pdf,.jpg,.jpeg,.png"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="date_awarded">Date Awarded</Label>
+                      <Input
+                        id="date_awarded"
+                        name="date_awarded"
+                        type="date"
+                        value={newAchievement.date_awarded}
+                        onChange={handleChange}
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="certificate_type">Certificate Type</Label>
+                      <Select
+                        value={newAchievement.certificate_type}
+                        onValueChange={(value) => handleSelectChange("certificate_type", value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select certificate type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="conference">Conference</SelectItem>
+                          <SelectItem value="workshop">Workshop</SelectItem>
+                          <SelectItem value="course">Course</SelectItem>
+                          <SelectItem value="other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
                     <div className="flex justify-end gap-2">
-                      <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        onClick={() => setIsAddDialogOpen(false)}
+                      >
                         Cancel
                       </Button>
-                      <Button onClick={handleAddAchievement}>Submit for Approval</Button>
+                      <Button type="submit">Submit for Approval</Button>
                     </div>
-                  </div>
+                  </form>
                 </DialogContent>
               </Dialog>
             </div>
@@ -305,10 +472,12 @@ export default function StudentActivities() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Categories</SelectItem>
+                  <SelectItem value="technical">Technical</SelectItem>
+                  <SelectItem value="sports">Sports</SelectItem>
+                  <SelectItem value="arts">Arts</SelectItem>
                   <SelectItem value="academic">Academic</SelectItem>
                   <SelectItem value="research">Research</SelectItem>
                   <SelectItem value="community_service">Community Service</SelectItem>
-                  <SelectItem value="sports">Sports</SelectItem>
                   <SelectItem value="leadership">Leadership</SelectItem>
                   <SelectItem value="internship">Internship</SelectItem>
                   <SelectItem value="extracurricular">Extracurricular</SelectItem>
